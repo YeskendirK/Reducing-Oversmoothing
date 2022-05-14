@@ -40,11 +40,11 @@ class GCN(nn.Module):
 
 class GAT(nn.Module):
     def __init__(self, nfeat, nhid, nclass, dropout, nhead, 
-                 norm_mode='None', norm_scale=1,**kwargs):
+                 norm_mode='None', norm_scale=1, relations={},**kwargs):
         super(GAT, self).__init__()
         alpha_droprate = dropout
-        self.gac1 = GraphAttConv(nfeat, nhid, nhead, alpha_droprate)
-        self.gac2 = GraphAttConv(nhid, nclass, 1, alpha_droprate)
+        self.gac1 = GraphAttConv(nfeat, nhid, nhead, alpha_droprate, relations)
+        self.gac2 = GraphAttConv(nhid, nclass, 1, alpha_droprate, relations)
 
         self.dropout = nn.Dropout(p=dropout)
         self.relu = nn.ELU(True) 
@@ -93,15 +93,16 @@ class DeepGCN(nn.Module):
 
 class DeepGAT(nn.Module):
     def __init__(self, nfeat, nhid, nclass, dropout, nlayer=2, residual=0, nhead=1,
-                 norm_mode='None', norm_scale=1, **kwargs):
+                 norm_mode='None', norm_scale=1, relations={}, **kwargs):
+        print("Relations: ", relations )
         super(DeepGAT, self).__init__()
         assert nlayer >= 1 
         alpha_droprate = dropout
         self.hidden_layers = nn.ModuleList([
-            GraphAttConv(nfeat if i==0 else nhid, nhid, nhead, alpha_droprate)
+            GraphAttConv(nfeat if i==0 else nhid, nhid, nhead, alpha_droprate, relations)
             for i in range(nlayer-1)
         ])
-        self.out_layer = GraphAttConv(nfeat if nlayer==1 else nhid, nclass, 1, alpha_droprate)
+        self.out_layer = GraphAttConv(nfeat if nlayer==1 else nhid, nclass, 1, alpha_droprate, relations)
 
         self.dropout = nn.Dropout(p=dropout)
         self.relu = nn.ELU(True)

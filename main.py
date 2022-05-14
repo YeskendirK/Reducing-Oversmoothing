@@ -33,7 +33,16 @@ parser.add_argument('--norm_scale', type=float, default=1.0, help='Row-normaliza
 parser.add_argument('--no_fea_norm', action='store_false', default=True, help='not normalize feature' )
 parser.add_argument('--missing_rate', type=int, default=0, help='missing rate, from 0 to 100' )
 
+# Embedding relations
+parser.add_argument('--difference', action='store_true', default=False, help='h1 - h2')
+parser.add_argument('--abs_difference', action='store_true', default=False, help='|h1 - h2|')
+parser.add_argument('--elem_product', action='store_true', default=False, help='h1 * h2')
+
 args = parser.parse_args()
+
+relations = {"difference": args.difference,
+             "abs_difference": args.abs_difference,
+             "elem_product": args.elem_product}
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -52,7 +61,8 @@ net = getattr(models, args.model)(nfeat, args.hid, nclass,
                                   nlayer=args.nlayer, 
                                   norm_mode=args.norm_mode,
                                   norm_scale=args.norm_scale,
-                                  residual=args.residual)
+                                  residual=args.residual,
+                                  relations=relations)
 net = net.to(device)
 optimizer = torch.optim.Adam(net.parameters(), args.lr, weight_decay=args.wd)
 criterion = torch.nn.CrossEntropyLoss()
