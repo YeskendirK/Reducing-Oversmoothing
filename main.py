@@ -4,6 +4,7 @@ from utils import train, test, val
 from data import load_data
 import datetime
 from pathlib import Path
+import json
 
 # out dir 
 OUT_PATH = "results"
@@ -72,7 +73,7 @@ logging.info(net)
 best_acc = 0 
 best_loss = 1e10
 
-log_dir = os.path.join(OUT_PATH, args.name)
+log_dir = os.path.join(OUT_PATH, args.name, args.data)
 Path(log_dir).mkdir(parents=True, exist_ok=True)
 
 file_name_prefix = args.data + "_" + args.model + "_" + str(args.nlayer) + datetime.datetime.now().strftime(
@@ -105,3 +106,13 @@ logging.info("-"*50)
 logging.info("Vali set results: loss %.3f, acc %.3f."%(val_loss, val_acc))
 logging.info("Test set results: loss %.3f, acc %.3f."%(test_loss, test_acc))
 logging.info("="*50)
+
+results_json = {"Val. loss": val_loss.item(),
+            "Val. accuracy": val_acc.item(),
+            "Test loss": test_loss.item(),
+            "Test acc": test_acc.item()}
+
+outfile_name = os.path.join(log_dir, file_name_prefix + 'checkpoint-best-results.json')
+with open(outfile_name, 'w') as outfile:
+    json.dump(results_json, outfile, indent=4)
+    print("Val/Test acc. saved in json file:", outfile_name)
