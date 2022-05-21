@@ -1,5 +1,6 @@
 data/
 results/
+experiment_results/
 
 .ipynb_checkpoints/
 .idea/

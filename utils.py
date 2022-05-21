@@ -1,3 +1,7 @@
+import torch
+import numpy as np
+from sklearn.metrics import pairwise_distances
+
 def train(net, optimizer, criterion, data):
     net.train()
     optimizer.zero_grad()
@@ -27,3 +31,19 @@ def accuracy(output, labels):
     correct = preds.eq(labels).double()
     correct = correct.sum()
     return correct / len(labels)
+
+def measure_row_diff(net, criterion, data):
+    with torch.no_grad():
+        h = net(data.x, data.adj)
+
+    h = h[data.test_mask]
+    h = h.data.cpu().numpy()
+    data_x = data.x[data.test_mask].data.cpu().numpy()
+    print("h shape = ", h.shape)
+    print("data_x shape = ", data_x.shape)
+    pair_dist = pairwise_distances(h)
+    sum_dist = np.sum(pair_dist)
+    n = h.shape[0]
+    row_diff = sum_dist / (n*n)
+
+    return row_diff

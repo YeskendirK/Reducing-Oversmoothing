@@ -1,6 +1,6 @@
 import os, torch, logging, argparse
 import models
-from utils import train, test, val
+from utils import train, test, val, measure_row_diff
 from data import load_data
 import datetime
 from pathlib import Path
@@ -31,8 +31,8 @@ parser.add_argument('--residual', type=int, default=0, help='Residual connection
 parser.add_argument('--norm_mode', type=str, default='None', help='Mode for PairNorm, {None, PN, PN-SI, PN-SCS}')
 parser.add_argument('--norm_scale', type=float, default=1.0, help='Row-normalization scale')
 # for data
-parser.add_argument('--no_fea_norm', action='store_false', default=True, help='not normalize feature' )
-parser.add_argument('--missing_rate', type=int, default=0, help='missing rate, from 0 to 100' )
+parser.add_argument('--no_fea_norm', action='store_false', default=True, help='not normalize feature')
+parser.add_argument('--missing_rate', type=int, default=0, help='missing rate, from 0 to 100')
 
 # Embedding relations
 parser.add_argument('--difference', action='store_true', default=False, help='h1 - h2')
@@ -48,18 +48,18 @@ relations = {"difference": args.difference,
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # logger
-#filename='example.log'
-logging.basicConfig(format='%(message)s', level=getattr(logging, args.log.upper())) 
+# filename='example.log'
+logging.basicConfig(format='%(message)s', level=getattr(logging, args.log.upper()))
 
 # load data
 data = load_data(args.data, normalize_feature=args.no_fea_norm, missing_rate=args.missing_rate,
                  cuda=torch.cuda.is_available())
 nfeat = data.x.size(1)
 nclass = int(data.y.max()) + 1
-net = getattr(models, args.model)(nfeat, args.hid, nclass, 
-                                  dropout=args.dropout, 
+net = getattr(models, args.model)(nfeat, args.hid, nclass,
+                                  dropout=args.dropout,
                                   nhead=args.nhead,
-                                  nlayer=args.nlayer, 
+                                  nlayer=args.nlayer,
                                   norm_mode=args.norm_mode,
                                   norm_scale=args.norm_scale,
                                   residual=args.residual,
@@ -70,7 +70,7 @@ criterion = torch.nn.CrossEntropyLoss()
 logging.info(net)
 
 # train
-best_acc = 0 
+best_acc = 0
 best_loss = 1e10
 
 log_dir = os.path.join(OUT_PATH, args.name, args.data)
@@ -82,8 +82,8 @@ file_name_prefix = args.data + "_" + args.model + "_" + str(args.nlayer) + datet
 for epoch in range(args.epochs):
     train_loss, train_acc = train(net, optimizer, criterion, data)
     val_loss, val_acc = val(net, criterion, data)
-    logging.debug('Epoch %d: train loss %.3f train acc: %.3f, val loss: %.3f val acc %.3f.'%
-                (epoch, train_loss, train_acc, val_loss, val_acc))
+    logging.debug('Epoch %d: train loss %.3f train acc: %.3f, val loss: %.3f val acc %.3f.' %
+                  (epoch, train_loss, train_acc, val_loss, val_acc))
     # save model
 
     if best_acc < val_acc:
@@ -101,16 +101,19 @@ file_name = os.path.join(log_dir, file_name_prefix + 'checkpoint-best-acc.pkl')
 net.load_state_dict(torch.load(file_name))
 val_loss, val_acc = val(net, criterion, data)
 test_loss, test_acc = test(net, criterion, data)
+test_row_diff = measure_row_diff(net, criterion, data)
 
-logging.info("-"*50)
-logging.info("Vali set results: loss %.3f, acc %.3f."%(val_loss, val_acc))
-logging.info("Test set results: loss %.3f, acc %.3f."%(test_loss, test_acc))
-logging.info("="*50)
+logging.info("-" * 50)
+logging.info("Vali set results: loss %.3f, acc %.3f." % (val_loss, val_acc))
+logging.info("Test set results: loss %.3f, acc %.3f." % (test_loss, test_acc))
+logging.info("Test row-diff results: %.6f." % (test_row_diff))
+logging.info("=" * 50)
 
 results_json = {"Val. loss": val_loss.item(),
-            "Val. accuracy": val_acc.item(),
-            "Test loss": test_loss.item(),
-            "Test acc": test_acc.item()}
+                "Val. accuracy": val_acc.item(),
+                "Test loss": test_loss.item(),
+                "Test acc": test_acc.item(),
+                "Test row-diff": test_row_diff}
 
 outfile_name = os.path.join(log_dir, file_name_prefix + 'checkpoint-best-results.json')
 with open(outfile_name, 'w') as outfile:
