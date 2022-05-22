@@ -6,17 +6,29 @@ import datetime
 from pathlib import Path
 import json
 
+import random
+import numpy as np
+
 # out dir 
 OUT_PATH = "results"
 if not os.path.isdir(OUT_PATH):
     os.mkdir(OUT_PATH)
 
 
+def set_seed(seed):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+
+
 def main(args):
     relations = {"difference": args.difference,
                  "abs_difference": args.abs_difference,
                  "elem_product": args.elem_product}
-
+    set_seed(args.seed)
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     # logger
@@ -54,8 +66,9 @@ def main(args):
     for epoch in range(args.epochs):
         train_loss, train_acc = train(net, optimizer, criterion, data)
         val_loss, val_acc = val(net, criterion, data)
-        logging.debug('Epoch %d: train loss %.3f train acc: %.3f, val loss: %.3f val acc %.3f.' %
-                      (epoch, train_loss, train_acc, val_loss, val_acc))
+        if epoch == 0 or (epoch+1)%args.log_every == 0:
+            logging.debug('Epoch %d: train loss %.3f train acc: %.3f, val loss: %.3f val acc %.3f.' %
+                          (epoch, train_loss, train_acc, val_loss, val_acc))
         # save model
 
         if best_acc < val_acc:
@@ -77,7 +90,6 @@ def main(args):
     col_diff = measure_col_diff(net, data)
     iig = compute_iig(net, data)
     gdr = compute_gdr(net, data, args.data)
-
 
     logging.info("-" * 50)
     logging.info("Vali set results: loss %.3f, acc %.3f." % (val_loss, val_acc))
@@ -115,6 +127,7 @@ if __name__ == '__main__':
     parser.add_argument('--dropout', type=float, default=0.6, help='Dropout rate.')
     parser.add_argument('--epochs', type=int, default=1000, help='Number of epochs to train.')
     parser.add_argument('--log', type=str, default='debug', help='{info, debug}')
+    parser.add_argument('--log_every', type=int, default=1, help='Log every _ steps')
     parser.add_argument('--wd', type=float, default=5e-4, help='Weight decay (L2 loss on parameters).')
     # for deep model
     parser.add_argument('--nlayer', type=int, default=2, help='Number of layers, works for Deep model.')

@@ -39,6 +39,7 @@ for filename in glob.glob(args.dir + '/*.json'):
     all_test.append(test_acc)
     all_val.append(val_acc)
     all_row_diff.append(row_diff)
+    all_col_diff.append(col_diff)
     all_iig.append(iig)
     all_gdr.append(gdr)
 
