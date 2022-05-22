@@ -1,6 +1,6 @@
 import os, torch, logging, argparse
 import models
-from utils import train, test, val, measure_row_diff, measure_col_diff
+from utils import train, test, val, measure_row_diff, measure_col_diff, compute_iig, compute_gdr
 from data import load_data
 import datetime
 from pathlib import Path
@@ -75,12 +75,17 @@ def main(args):
     test_loss, test_acc = test(net, criterion, data)
     row_diff = measure_row_diff(net, data)
     col_diff = measure_col_diff(net, data)
+    iig = compute_iig(net, data)
+    gdr = compute_gdr(net, data, args.data)
+
 
     logging.info("-" * 50)
     logging.info("Vali set results: loss %.3f, acc %.3f." % (val_loss, val_acc))
     logging.info("Test set results: loss %.3f, acc %.3f." % (test_loss, test_acc))
     logging.info("Row-diff results: %.6f." % row_diff)
     logging.info("Col-diff results: %.6f." % col_diff)
+    logging.info("Instance information gain results: %.6f." % iig)
+    logging.info("Group distance ratio results: %.6f." % gdr)
     logging.info("=" * 50)
 
     results_json = {"Val. loss": val_loss.item(),
@@ -88,7 +93,9 @@ def main(args):
                     "Test loss": test_loss.item(),
                     "Test acc": test_acc.item(),
                     "row-diff": row_diff,
-                    "col-diff": col_diff,}
+                    "col-diff": col_diff,
+                    "iig": iig,
+                    "gdr": gdr}
 
     outfile_name = os.path.join(log_dir, file_name_prefix + 'checkpoint-best-results.json')
     with open(outfile_name, 'w') as outfile:
