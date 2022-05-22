@@ -94,7 +94,6 @@ class DeepGCN(nn.Module):
 class DeepGAT(nn.Module):
     def __init__(self, nfeat, nhid, nclass, dropout, nlayer=2, residual=0, nhead=1,
                  norm_mode='None', norm_scale=1, relations={}, **kwargs):
-        print("Relations: ", relations )
         super(DeepGAT, self).__init__()
         assert nlayer >= 1 
         alpha_droprate = dropout

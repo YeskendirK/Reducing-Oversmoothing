@@ -32,13 +32,14 @@ def accuracy(output, labels):
     correct = correct.sum()
     return correct / len(labels)
 
-def measure_row_diff(net, criterion, data):
+def measure_row_diff(net, data):
     with torch.no_grad():
         h = net(data.x, data.adj)
 
-    h = h[data.test_mask]
+    h = h#[data.test_mask]
     h = h.data.cpu().numpy()
-    data_x = data.x[data.test_mask].data.cpu().numpy()
+    # data_x = data.x[data.test_mask].data.cpu().numpy()
+    data_x = data.x.data.cpu().numpy()
     print("h shape = ", h.shape)
     print("data_x shape = ", data_x.shape)
     pair_dist = pairwise_distances(h)
