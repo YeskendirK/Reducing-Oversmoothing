@@ -15,11 +15,13 @@ if os.path.exists(log_dir) is False:
 all_data = {"layers": [],
             "test_acc": [],
             "val_acc": [],
-            "test_row_diff": []}
+            "row_diff": [],
+            "col_diff": []}
 all_test = []
 nlayers = []
 all_val = []
-all_test_row_diff = []
+all_row_diff = []
+all_col_diff = []
 for filename in glob.glob(args.dir + '/*.json'):
     filename_only = filename.split("/")[-1]
     nlayer = int(filename_only.split("_")[2])
@@ -27,15 +29,17 @@ for filename in glob.glob(args.dir + '/*.json'):
     data = json.loads(f.read())
     test_acc = data["Test acc"]
     val_acc = data["Val. accuracy"]
-    test_row_diff = data["Test row-diff"]
+    row_diff = data["row-diff"]
+    col_diff = data["col-diff"]
     nlayers.append(nlayer)
     all_test.append(test_acc)
     all_val.append(val_acc)
-    all_test_row_diff.append(test_row_diff)
+    all_row_diff.append(row_diff)
 
 all_data["test_acc"] = [x for _, x in sorted(zip(nlayers, all_test))]
 all_data["val_acc"] = [x for _, x in sorted(zip(nlayers, all_val))]
-all_data["test_row_diff"] = [x for _, x in sorted(zip(nlayers, all_test_row_diff))]
+all_data["row_diff"] = [x for _, x in sorted(zip(nlayers, all_row_diff))]
+all_data["col_diff"] = [x for _, x in sorted(zip(nlayers, all_col_diff))]
 all_data["layers"] = sorted(nlayers)
 
 save_filename = log_dir + args.outfile_name
