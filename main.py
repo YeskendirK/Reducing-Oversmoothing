@@ -25,6 +25,8 @@ def set_seed(seed):
 
 
 def main(args):
+    torch.cuda.empty_cache()
+
     relations = {"difference": args.difference,
                  "abs_difference": args.abs_difference,
                  "elem_product": args.elem_product}
@@ -80,6 +82,9 @@ def main(args):
             file_name = os.path.join(log_dir, file_name_prefix + 'checkpoint-best-loss.pkl')
             torch.save(net.state_dict(), file_name)
 
+        del train_loss
+        del train_acc
+        torch.cuda.empty_cache()
     # pick up the best model based on val_acc, then do test
 
     file_name = os.path.join(log_dir, file_name_prefix + 'checkpoint-best-acc.pkl')
@@ -114,6 +119,17 @@ def main(args):
         json.dump(results_json, outfile, indent=4)
         print("Val/Test acc. saved in json file:", outfile_name)
 
+    del data
+    del val_loss
+    del val_acc
+    del test_loss
+    del test_acc
+    del row_diff
+    del col_diff
+    del iig
+    del gdr
+    del results_json
+    del net
 
 if __name__ == '__main__':
     # parser for hyperparameters
