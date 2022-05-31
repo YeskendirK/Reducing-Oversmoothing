@@ -105,7 +105,10 @@ class DeepGAT(nn.Module):
 
         self.dropout = nn.Dropout(p=dropout)
         self.relu = nn.ELU(True)
-        self.norm = PairNorm(norm_mode, norm_scale)
+        if norm_mode == 'group':
+            self.norm = GroupNorm(nhid, num_groups=1, skip_weight=0.005)
+        else:
+            self.norm = PairNorm(norm_mode, norm_scale)
         self.skip = residual
 
     def forward(self, x, adj):
