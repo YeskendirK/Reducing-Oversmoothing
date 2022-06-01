@@ -49,7 +49,8 @@ def main(args):
                                       norm_mode=args.norm_mode,
                                       norm_scale=args.norm_scale,
                                       residual=args.residual,
-                                      relations=relations)
+                                      relations=relations,
+                                      num_groups=args.num_groups)
     net = net.to(device)
     optimizer = torch.optim.Adam(net.parameters(), args.lr, weight_decay=args.wd)
     criterion = torch.nn.CrossEntropyLoss()
@@ -152,6 +153,8 @@ if __name__ == '__main__':
     # - PairNorm mode, use PN-SI or PN-SCS for GCN and GAT. With more than 5 layers get lots improvement.
     parser.add_argument('--norm_mode', type=str, default='None', help='Mode for PairNorm, {None, PN, PN-SI, PN-SCS}')
     parser.add_argument('--norm_scale', type=float, default=1.0, help='Row-normalization scale')
+    # for GroupNorm
+    parser.add_argument('--num_groups', type=int, default=10)  # citeseer 10
     # for data
     parser.add_argument('--no_fea_norm', action='store_false', default=True, help='not normalize feature')
     parser.add_argument('--missing_rate', type=int, default=0, help='missing rate, from 0 to 100')
@@ -160,6 +163,7 @@ if __name__ == '__main__':
     parser.add_argument('--difference', action='store_true', default=False, help='h1 - h2')
     parser.add_argument('--abs_difference', action='store_true', default=False, help='|h1 - h2|')
     parser.add_argument('--elem_product', action='store_true', default=False, help='h1 * h2')
+
 
     # Seed
     parser.add_argument('--seed', type=int, default=42, help='Seed')
