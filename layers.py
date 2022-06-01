@@ -150,8 +150,7 @@ class PairNorm(nn.Module):
 
 
 class GroupNorm(torch.nn.Module):
-    def __init__(self, dim_hidden, num_groups=1,
-                 skip_weight=0.005):
+    def __init__(self, dim_hidden, num_groups=10, skip_weight=0.005):
         super(GroupNorm, self).__init__()
         self.num_groups = num_groups
         self.skip_weight = skip_weight

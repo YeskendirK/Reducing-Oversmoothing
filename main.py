@@ -50,7 +50,8 @@ def main(args):
                                       norm_scale=args.norm_scale,
                                       residual=args.residual,
                                       relations=relations,
-                                      num_groups=args.num_groups)
+                                      num_groups=args.num_groups,
+                                      skip_weight=args.skip_weight)
     net = net.to(device)
     optimizer = torch.optim.Adam(net.parameters(), args.lr, weight_decay=args.wd)
     criterion = torch.nn.CrossEntropyLoss()
@@ -155,6 +156,7 @@ if __name__ == '__main__':
     parser.add_argument('--norm_scale', type=float, default=1.0, help='Row-normalization scale')
     # for GroupNorm
     parser.add_argument('--num_groups', type=int, default=10)  # citeseer 10
+    parser.add_argument('--skip_weight', type=float, default=0.005)  # citeseer 0.001
     # for data
     parser.add_argument('--no_fea_norm', action='store_false', default=True, help='not normalize feature')
     parser.add_argument('--missing_rate', type=int, default=0, help='missing rate, from 0 to 100')
@@ -182,6 +184,7 @@ if __name__ == '__main__':
 
     for curr_seed in candidate_seeds:
         for curr_nlayer in candidate_nlayers:
+            args.skip_weight = 0.001 if curr_nlayer < 6 else 0.01
             args.seed = curr_seed
             args.nlayer = curr_nlayer
             main(args)

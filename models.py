@@ -98,7 +98,7 @@ class DeepGCN(nn.Module):
 
 class DeepGAT(nn.Module):
     def __init__(self, nfeat, nhid, nclass, dropout, nlayer=2, residual=0, nhead=1,
-                 norm_mode='None', norm_scale=1, relations={}, num_groups=10, **kwargs):
+                 norm_mode='None', norm_scale=1, relations={}, num_groups=10, skip_weight=0.005, **kwargs):
         super(DeepGAT, self).__init__()
         assert nlayer >= 1
         alpha_droprate = dropout
@@ -111,7 +111,7 @@ class DeepGAT(nn.Module):
         self.dropout = nn.Dropout(p=dropout)
         self.relu = nn.ELU(True)
         if norm_mode == 'group':
-            self.norm = GroupNorm(nhid, num_groups=num_groups, skip_weight=0.005)
+            self.norm = GroupNorm(nhid, num_groups=num_groups, skip_weight=skip_weight)
         else:
             self.norm = PairNorm(norm_mode, norm_scale)
         self.skip = residual
