@@ -14,7 +14,7 @@ Create environment using conda
 conda env create -f gnn_gpu.yml
 # Activate environment
 conda activate gnn_gpu
-# If you are working on CPU, change gnn_gpu to gnn_gpu
+# If you are working on CPU, change gnn_gpu to gnn_cpu
 ```
 
 ## Training and Evaluation
