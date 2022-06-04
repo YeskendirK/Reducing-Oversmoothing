@@ -110,10 +110,25 @@ class DeepGAT(nn.Module):
 
         self.dropout = nn.Dropout(p=dropout)
         self.relu = nn.ELU(True)
-        if norm_mode == 'group':
-            self.norm = GroupNorm(nhid, num_groups=num_groups, skip_weight=skip_weight)
-        else:
-            self.norm = PairNorm(norm_mode, norm_scale)
+
+        self.layers_bn = nn.ModuleList([])
+        for i in range(nlayer):
+            if i == nlayer-1:
+                dim_out = self.out_layer.out_features
+            else:
+                dim_out = self.hidden_layers[i].out_features
+
+            if norm_mode == 'group':
+                self.layers_bn.append(GroupNorm(dim_out, num_groups=num_groups, skip_weight=skip_weight))
+            else:
+                self.layers_bn.append(PairNorm(norm_mode, norm_scale))
+
+
+
+        # if norm_mode == 'group':
+        #     self.norm = GroupNorm(nhid, num_groups=num_groups, skip_weight=skip_weight)
+        # else:
+        #     self.norm = PairNorm(norm_mode, norm_scale)
         self.skip = residual
 
     def forward(self, x, adj):
@@ -121,7 +136,7 @@ class DeepGAT(nn.Module):
         for i, layer in enumerate(self.hidden_layers):
             x = self.dropout(x)
             x = layer(x, adj)
-            x = self.norm(x)
+            x = self.layers_bn[i](x)
             x = self.relu(x)
             if self.skip > 0 and i % self.skip == 0:
                 x = x + x_old
@@ -129,4 +144,5 @@ class DeepGAT(nn.Module):
 
         x = self.dropout(x)
         x = self.out_layer(x, adj)
+        x = self.layers_bn[-1](x)
         return x

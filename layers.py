@@ -46,6 +46,7 @@ class GraphAttConv(nn.Module):
         self.in_features = in_features
         self.out_perhead = out_perhead
         self.heads = heads
+        self.out_features = out_features
 
     def forward(self, input, adj):
         output = torch.cat([att(input, adj) for att in self.graph_atts], dim=1)
@@ -151,6 +152,7 @@ class PairNorm(nn.Module):
 
 class GroupNorm(torch.nn.Module):
     def __init__(self, dim_hidden, num_groups=10, skip_weight=0.005):
+        # print("Group Norm is activated !!!!!", dim_hidden)
         super(GroupNorm, self).__init__()
         self.num_groups = num_groups
         self.skip_weight = skip_weight
