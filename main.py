@@ -148,10 +148,7 @@ if __name__ == '__main__':
     # for deep model
     parser.add_argument('--nlayer', type=int, default=2, help='Number of layers, works for Deep model.')
     parser.add_argument('--residual', type=int, default=0, help='Residual connection')
-    # for PairNorm
-    # - PairNorm mode, use PN-SI or PN-SCS for GCN and GAT. With more than 5 layers get lots improvement.
-    parser.add_argument('--norm_mode', type=str, default='None', help='Mode for PairNorm, {None, PN, PN-SI, PN-SCS}')
-    parser.add_argument('--norm_scale', type=float, default=1.0, help='Row-normalization scale')
+
     # for data
     parser.add_argument('--no_fea_norm', action='store_false', default=True, help='not normalize feature')
     parser.add_argument('--missing_rate', type=int, default=0, help='missing rate, from 0 to 100')
