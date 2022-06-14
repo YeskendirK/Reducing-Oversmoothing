@@ -161,6 +161,9 @@ if __name__ == '__main__':
     # Seed
     parser.add_argument('--seed', type=int, default=42, help='Seed')
 
+    parser.add_argument('--norm_mode', type=str, default='None')
+    parser.add_argument('--norm_scale', type=float, default=1.0)
+
     args = parser.parse_args()
 
     if args.nlayer == -1:
