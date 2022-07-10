@@ -39,10 +39,14 @@ class GraphAttConvOneHead(nn.Module):
         for relation_type in relations.keys():
             if relations[relation_type] is True:
                 self.concat_features += out_features
-        self.weight = nn.Parameter(torch.zeros(size=(in_features, out_features)))
+        # self.weight = nn.Parameter(torch.zeros(size=(in_features, out_features)))
+        self.weight_embedding = nn.Parameter(torch.zeros(size=(in_features, out_features)))
+        self.weight_relation = nn.Parameter(torch.zeros(size=(in_features, out_features)))
         self.a = nn.Parameter(torch.zeros(size=(1, self.concat_features)))
         # init 
-        nn.init.xavier_normal_(self.weight.data, gain=nn.init.calculate_gain('relu'))  # look at here
+        # nn.init.xavier_normal_(self.weight.data, gain=nn.init.calculate_gain('relu'))  # look at here
+        nn.init.xavier_normal_(self.weight_embedding.data, gain=nn.init.calculate_gain('relu'))  # look at here
+        nn.init.xavier_normal_(self.weight_relation.data, gain=nn.init.calculate_gain('relu'))  # look at here
         nn.init.xavier_normal_(self.a.data, gain=nn.init.calculate_gain('relu'))
 
         self.dropout = nn.Dropout(dropout)
@@ -50,18 +54,24 @@ class GraphAttConvOneHead(nn.Module):
 
     def forward(self, input, adj):
         edge = adj._indices()
-        h = torch.mm(input, self.weight)
+        # h = torch.mm(input, self.weight)
+        h_e = torch.mm(input, self.weight_embedding)
+        h_r = torch.mm(input, self.weight_relation)
         # Self-attention on the nodes - Shared attention mechanism
-        final_features = [h[edge[0, :], :], h[edge[1, :], :]]
+        # final_features = [h[edge[0, :], :], h[edge[1, :], :]]
+        final_features = [h_e[edge[0, :], :], h_e[edge[1, :], :]]
         if self.relations["difference"]:
-            new_feature = torch.sub(h[edge[1, :], :], h[edge[0, :], :])
+            # new_feature = torch.sub(h[edge[1, :], :], h[edge[0, :], :])
+            new_feature = torch.sub(h_r[edge[1, :], :], h_r[edge[0, :], :])
             final_features += [new_feature]
         if self.relations["abs_difference"]:
-            new_feature = torch.sub(h[edge[1, :], :], h[edge[0, :], :])
+            # new_feature = torch.sub(h[edge[1, :], :], h[edge[0, :], :])
+            new_feature = torch.sub(h_r[edge[1, :], :], h_r[edge[0, :], :])
             new_feature = torch.abs(new_feature)
             final_features += [new_feature]
         if self.relations["elem_product"]:
-            new_feature = torch.mul(h[edge[0, :], :], h[edge[1, :], :])
+            # new_feature = torch.mul(h[edge[0, :], :], h[edge[1, :], :])
+            new_feature = torch.mul(h_r[edge[0, :], :], h_r[edge[1, :], :])
             final_features += [new_feature]
 
         edge_h = torch.cat(final_features, dim=1).t()  # edge_h: 2*D x E
@@ -69,7 +79,8 @@ class GraphAttConvOneHead(nn.Module):
         alpha = self.leakyrelu(self.a.mm(edge_h).squeeze())  # E
         n = len(input)
         alpha = softmax(alpha, edge[0], n)
-        output = spmm(edge, self.dropout(alpha), n, n, h)  # h_prime: N x out
+        # output = spmm(edge, self.dropout(alpha), n, n, h)  # h_prime: N x out
+        output = spmm(edge, self.dropout(alpha), n, n, h_e)  # h_prime: N x out
         # output = spmm(edge, self.dropout(alpha), n, n, self.dropout(h)) # h_prime: N x out
         return output
 
