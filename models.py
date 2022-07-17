@@ -16,12 +16,14 @@ class DeepGAT(nn.Module):
         self.dropout = nn.Dropout(p=dropout)
         self.relu = nn.ELU(True)
         self.skip = residual
+        self.norm = PairNorm(norm_mode, norm_scale)
 
     def forward(self, x, adj):
         x_old = 0
         for i, layer in enumerate(self.hidden_layers):
             x = self.dropout(x)
             x = layer(x, adj)
+            x = self.norm(x)
             x = self.relu(x)
             if self.skip > 0 and i % self.skip == 0:
                 x = x + x_old
