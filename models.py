@@ -32,3 +32,36 @@ class DeepGAT(nn.Module):
         x = self.dropout(x)
         x = self.out_layer(x, adj)
         return x
+
+
+class DeepGCN(nn.Module):
+    def __init__(self, nfeat, nhid, nclass, dropout, nlayer=2, residual=0,
+                 norm_mode='None', norm_scale=1, **kwargs):
+        super(DeepGCN, self).__init__()
+        assert nlayer >= 1
+        self.hidden_layers = nn.ModuleList([
+            GraphConv(nfeat if i == 0 else nhid, nhid)
+            for i in range(nlayer - 1)
+        ])
+        self.out_layer = GraphConv(nfeat if nlayer == 1 else nhid, nclass)
+
+        self.dropout = nn.Dropout(p=dropout)
+        self.dropout_rate = dropout
+        self.relu = nn.ReLU(True)
+        self.norm = PairNorm(norm_mode, norm_scale)
+        self.skip = residual
+
+    def forward(self, x, adj):
+        x_old = 0
+        for i, layer in enumerate(self.hidden_layers):
+            x = self.dropout(x)
+            x = layer(x, adj)
+            x = self.norm(x)
+            x = self.relu(x)
+            if self.skip > 0 and i % self.skip == 0:
+                x = x + x_old
+                x_old = x
+
+        x = self.dropout(x)
+        x = self.out_layer(x, adj)
+        return x
